@@ -27,6 +27,11 @@ const schemaSignInUp = Joi.object({
   confirmPassword: Joi.any().valid(Joi.ref("password")).required(),
 });
 
+const schemaSignIn = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.any().required().min(3),
+});
+
 app.post("/cadastro", async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
   try {
@@ -47,6 +52,25 @@ app.post("/cadastro", async (req, res) => {
     console.log(err.message);
   }
 });
+
+app.post("/", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const validation = schemaSignIn.validate({ email, password });
+    if (validation.error) {
+      return res.status(422).send(validation.error);
+    }
+    const validateEmail = await db.collection("users").findOne({ email });
+    if (!validateEmail) {
+      return res.sendStatus(404);
+    }
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err.message);
+  }
+});
+
+app.post("/nova-transacao/:tipo", async (req, res) => {});
 
 const PORT = 5000;
 app.listen(PORT, () => {
