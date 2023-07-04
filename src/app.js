@@ -4,10 +4,14 @@ import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import Joi from "joi";
 
+//CONFIGS
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 dotenv.config();
+
+//DATABASE
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
@@ -20,6 +24,8 @@ mongoClient
   })
   .catch((err) => console.log(err.message));
 
+//SCHEMAS
+
 const schemaSignInUp = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().email().required(),
@@ -31,6 +37,8 @@ const schemaSignIn = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.any().required().min(3),
 });
+
+//REQUESTS
 
 app.post("/cadastro", async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
