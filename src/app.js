@@ -29,13 +29,13 @@ mongoClient
 const schemaSignInUp = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().email().required(),
-  password: Joi.any().required().min(3),
-  confirmPassword: Joi.any().valid(Joi.ref("password")).required(),
+  password: Joi.string().min(3).required(),
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
 });
 
 const schemaSignIn = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.any().required().min(3),
+  password: Joi.string().min(3).required(),
 });
 
 //REQUESTS
