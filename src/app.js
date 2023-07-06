@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import Joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
@@ -59,7 +59,7 @@ app.post("/cadastro", async (req, res) => {
     const alreadySigned = await db.collection("users").findOne({ email });
     if (alreadySigned) return res.sendStatus(409);
 
-    const hash = bcrypt.hash(password, 10);
+    const hash = bcrypt.hashSync(password, 10);
 
     await db.collection("users").insertOne({ name, email, password: hash });
     res.sendStatus(201);
@@ -108,7 +108,8 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
     if (!token || !validateToken) return res.sendStatus(401);
     await db
       .collection("transactions")
-      .insertOne({ tipo, validateToken: validateToken.validateEmailId });
+      .insertOne({ valor, descricao }, { _id: new ObjectId(tipo) });
+
     res.sendStatus(201);
   } catch (err) {
     console.log(err.message);
