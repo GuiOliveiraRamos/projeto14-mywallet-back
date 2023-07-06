@@ -40,6 +40,10 @@ const schemaSignIn = Joi.object({
   password: Joi.string().min(3).required(),
 });
 
+const schemaTransactions = Joi.object({
+  value: Joi.number().positive().required(),
+  description: Joi.string().required(),
+});
 //REQUESTS
 
 app.post("/cadastro", async (req, res) => {
@@ -83,13 +87,28 @@ app.post("/", async (req, res) => {
     await db
       .collection("sessions")
       .insertOne({ validateEmailId: validateEmail._id, token });
-    res.send(token);
+    res.status(200).send(token);
   } catch (err) {
     console.log(err.message);
   }
 });
 
-app.post("/nova-transacao/:tipo", async (req, res) => {});
+app.post("/nova-transacao/:tipo", async (req, res) => {
+  const { valor, descricao } = req.body;
+  const { tipo } = req.params;
+  const token = req.headers.authorization;
+
+  try {
+    const validation = schemaTransactions.validate({ valor, descricao });
+    if (!validation) return res.sendStatus(422);
+    const validateToken = await db
+      .collection("sessions")
+      .findOne({ token: token.replace("Bearer ", "") });
+    if (!token || !validateToken) return res.sendStatus(401);
+  } catch (err) {
+    console.log(err.message);
+  }
+});
 
 const PORT = 5000;
 app.listen(PORT, () => {
