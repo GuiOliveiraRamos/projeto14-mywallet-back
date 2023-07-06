@@ -24,7 +24,7 @@ mongoClient
     db = mongoClient.db();
     console.log("rodando");
   })
-  .catch((err) => console.log(err.message));
+  .catch((err) => console.log("err.message", err.message));
 
 //SCHEMAS
 
@@ -48,7 +48,6 @@ const schemaTransactions = Joi.object({
 
 app.post("/cadastro", async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
-  const hash = bcrypt.hashSync(password, 10);
 
   try {
     const validation = schemaSignInUp.validate(
@@ -59,6 +58,8 @@ app.post("/cadastro", async (req, res) => {
 
     const alreadySigned = await db.collection("users").findOne({ email });
     if (alreadySigned) return res.sendStatus(409);
+
+    const hash = bcrypt.hash(password, 10);
 
     await db.collection("users").insertOne({ name, email, password: hash });
     res.sendStatus(201);
@@ -78,7 +79,7 @@ app.post("/", async (req, res) => {
 
     const validatePassword = bcrypt.compareSync(
       password,
-      validateEmail.password
+      validateEmail.password.toString()
     );
 
     if (!validatePassword) return res.sendStatus(401);
@@ -89,7 +90,7 @@ app.post("/", async (req, res) => {
       .insertOne({ validateEmailId: validateEmail._id, token });
     res.status(200).send(token);
   } catch (err) {
-    console.log(err.message);
+    console.log(err);
   }
 });
 
@@ -105,6 +106,10 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
       .collection("sessions")
       .findOne({ token: token.replace("Bearer ", "") });
     if (!token || !validateToken) return res.sendStatus(401);
+    await db
+      .collection("transactions")
+      .insertOne({ tipo, validateToken: validateToken.validateEmailId });
+    res.sendStatus(201);
   } catch (err) {
     console.log(err.message);
   }
