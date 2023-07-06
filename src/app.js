@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import Joi from "joi";
+import bcrypt from "bcrypt";
+import { v4 as uuid } from "uuid";
 
 //CONFIGS
 
@@ -42,19 +44,19 @@ const schemaSignIn = Joi.object({
 
 app.post("/cadastro", async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
+  const hash = bcrypt.hashSync(password, 10);
+
   try {
     const validation = schemaSignInUp.validate(
       { name, email, password, confirmPassword },
       { abortEarly: false }
     );
-    if (validation.error) {
-      return res.status(422).send(validation.error);
-    }
-    const alreadySigned = await db.collection("users").findOne({ email });
-    if (alreadySigned) {
-      return res.sendStatus(409);
-    }
+    if (validation.error) return res.status(422).send(validation.error);
 
+    const alreadySigned = await db.collection("users").findOne({ email });
+    if (alreadySigned) return res.sendStatus(409);
+
+    await db.collection("users").insertOne({ name, email, password: hash });
     res.sendStatus(201);
   } catch (err) {
     console.log(err.message);
@@ -65,14 +67,23 @@ app.post("/", async (req, res) => {
   const { email, password } = req.body;
   try {
     const validation = schemaSignIn.validate({ email, password });
-    if (validation.error) {
-      return res.status(422).send(validation.error);
-    }
+    if (validation.error) return res.status(422).send(validation.error);
+
     const validateEmail = await db.collection("users").findOne({ email });
-    if (!validateEmail) {
-      return res.sendStatus(404);
-    }
-    res.sendStatus(200);
+    if (!validateEmail) return res.sendStatus(404);
+
+    const validatePassword = bcrypt.compareSync(
+      password,
+      validateEmail.password
+    );
+
+    if (!validatePassword) return res.sendStatus(401);
+
+    const token = uuid();
+    await db
+      .collection("sessions")
+      .insertOne({ validateEmailId: validateEmail._id, token });
+    res.send(token);
   } catch (err) {
     console.log(err.message);
   }
