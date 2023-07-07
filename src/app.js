@@ -72,6 +72,19 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
   }
 });
 
+app.get("/home", async (req, res) => {
+  const { authorization } = req.headers;
+  const token = authorization?.replace("Bearer ", "");
+
+  try {
+    if (!token) return res.sendStatus(401);
+    const transactions = await db.collection("transactions").find().toArray();
+    res.send(transactions);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 const PORT = 5000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
