@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { MongoClient, ObjectId } from "mongodb";
 import Joi from "joi";
 import { signin, signup } from "./controllers/user.controllers.js";
-
+import dayjs from "dayjs";
 //CONFIGS
 
 const app = express();
@@ -54,6 +54,7 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
   const { tipo } = req.params;
   const { authorization } = req.headers;
   const token = authorization?.replace("Bearer ", "");
+  const date = dayjs().format("DD/MM");
 
   try {
     const validation = schemaTransactions.validate({
@@ -64,9 +65,10 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
     if (validation.error) return res.sendStatus(422);
 
     if (!token) return res.sendStatus(401);
+
     await db
       .collection("transactions")
-      .insertOne({ valor, descricao, tipo: tipo });
+      .insertOne({ valor, descricao, tipo, date });
 
     res.sendStatus(201);
   } catch (err) {
