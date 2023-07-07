@@ -40,8 +40,8 @@ export const schemaSignIn = Joi.object({
 });
 
 const schemaTransactions = Joi.object({
-  value: Joi.number().positive().required(),
-  description: Joi.string().required(),
+  valor: Joi.number().positive().required(),
+  descricao: Joi.string().required(),
 });
 //REQUESTS
 
@@ -52,18 +52,19 @@ app.post("/", signin);
 app.post("/nova-transacao/:tipo", async (req, res) => {
   const { valor, descricao } = req.body;
   const { tipo } = req.params;
-  const token = req.headers.authorization;
+  const { authorization } = req.headers;
+  const token = authorization?.replace("Bearer ", "");
 
   try {
-    const validation = schemaTransactions.validate({ valor, descricao });
-    if (!validation) return res.sendStatus(422);
-    const validateToken = await db
-      .collection("sessions")
-      .findOne({ token: token.replace("Bearer ", "") });
-    if (!token || !validateToken) return res.sendStatus(401);
-    await db
-      .collection("transactions")
-      .insertOne({ valor, descricao }, { _id: new ObjectId(tipo) });
+    const validation = schemaTransactions.validate({
+      valor,
+      descricao,
+    });
+    console.log(validation);
+    if (validation.error) return res.sendStatus(422);
+
+    if (!token) return res.sendStatus(401);
+    await db.collection("transactions").insertOne({ valor, descricao });
 
     res.sendStatus(201);
   } catch (err) {
