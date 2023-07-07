@@ -19,7 +19,8 @@ export async function signup(req, res) {
     const hash = bcrypt.hashSync(password, 10);
 
     await db.collection("users").insertOne({ name, email, password: hash });
-    res.sendStatus(201);
+    const token = uuid();
+    res.status(201).send({ token, name });
   } catch (err) {
     console.log(err);
   }
@@ -44,7 +45,7 @@ export async function signin(req, res) {
     await db
       .collection("sessions")
       .insertOne({ validateEmailId: validateEmail._id, token });
-    res.status(200).send(token);
+    res.status(200).send({ token, name: validateEmail.name });
   } catch (err) {
     console.log(err);
   }

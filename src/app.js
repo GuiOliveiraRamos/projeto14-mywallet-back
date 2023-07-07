@@ -64,7 +64,9 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
     if (validation.error) return res.sendStatus(422);
 
     if (!token) return res.sendStatus(401);
-    await db.collection("transactions").insertOne({ valor, descricao });
+    await db
+      .collection("transactions")
+      .insertOne({ valor, descricao, tipo: tipo });
 
     res.sendStatus(201);
   } catch (err) {
