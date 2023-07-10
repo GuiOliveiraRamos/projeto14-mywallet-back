@@ -5,8 +5,7 @@ import { schemaTransactions } from "../schemas/transactions.schemas.js";
 export async function newTransaction(req, res) {
   const { valor, descricao } = req.body;
   const { tipo } = req.params;
-  const { authorization } = req.headers;
-  const token = authorization?.replace("Bearer ", "");
+
   const date = dayjs().format("DD/MM");
 
   try {
@@ -16,8 +15,6 @@ export async function newTransaction(req, res) {
     });
     console.log(validation);
     if (validation.error) return res.sendStatus(422);
-
-    if (!token) return res.sendStatus(401);
 
     await db
       .collection("transactions")
@@ -30,11 +27,7 @@ export async function newTransaction(req, res) {
 }
 
 export async function renderTransactions(req, res) {
-  const { authorization } = req.headers;
-  const token = authorization?.replace("Bearer ", "");
-
   try {
-    if (!token) return res.sendStatus(401);
     const transactions = await db.collection("transactions").find().toArray();
     res.send(transactions);
   } catch (err) {
