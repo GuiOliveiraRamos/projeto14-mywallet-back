@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
-import { db } from "../app.js";
+import { db } from "../database/database.connection.js";
 import { v4 as uuid } from "uuid";
-import { schemaSignInUp, schemaSignIn } from "../app.js";
+import { schemaSignIn, schemaSignInUp } from "../schemas/user.schemas.js";
 
 export async function signup(req, res) {
   const { name, email, password, confirmPassword } = req.body;
